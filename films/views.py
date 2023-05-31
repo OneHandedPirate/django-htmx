@@ -37,6 +37,12 @@ class FilmListView(LoginRequiredMixin, ListView):
     template_name = 'films.html'
     model = Film
     context_object_name = 'films'
+    paginate_by = 2
+
+    def get_template_names(self):
+        if self.request.htmx:
+            return 'partials/film-list-elements.html'
+        return 'films.html'
 
     def get_queryset(self):
         return UserFilms.objects.filter(user=self.request.user)
@@ -92,9 +98,9 @@ def search_film(request):
 def clear(request):
     return HttpResponse('')
 
+
 def sort(request):
     film_pks_order = request.POST.getlist('film_order')
-    print(film_pks_order)
     films = []
     for idx, film_pk in enumerate(film_pks_order, start=1):
         userfilm = UserFilms.objects.get(pk=film_pk)
@@ -119,7 +125,6 @@ def films_partial(request):
 @login_required
 def upload_photo(request, pk):
     userfilm = get_object_or_404(UserFilms, pk=pk)
-    print(request.FILES)
     photo = request.FILES.get('photo')
     userfilm.film.photo.save(photo.name, photo)
     context = {'userfilm': userfilm}
